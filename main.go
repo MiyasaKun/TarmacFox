@@ -35,6 +35,7 @@ func init() {
 }
 
 func main() {
+	helper.GenerateTables()
 	commands.SetupHandlers(sess)
 
 	err := sess.Open()
