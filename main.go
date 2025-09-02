@@ -35,6 +35,7 @@ func init() {
 }
 
 func main() {
+
 	helper.GenerateTables()
 	commands.SetupHandlers(sess)
 
@@ -59,16 +60,4 @@ func main() {
 
 	helper.CloseDB()
 	log.Println("Gracefully shutting down.")
-}
-
-func reactToPing(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-	if m.Content == "ping" {
-		_, err := s.ChannelMessageSendReply(m.ChannelID, "The Bot is alive! 🚀", m.Reference())
-		if err != nil {
-			log.Printf("error sending reply: %v", err)
-		}
-	}
 }
