@@ -31,6 +31,7 @@ func init() {
 		Username: helper.Getenvordefault("DB_USERNAME", ""),
 		Password: helper.Getenvordefault("DB_PASSWORD", ""),
 	})
+	helper.InitCache()
 
 }
 
