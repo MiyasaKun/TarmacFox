@@ -23,6 +23,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
+        file: ./.github/workflows/Dockerfile # Specify the path to your Dockerfile
         push: false
         tags: tarmacfox:latest
         outputs: type=docker,dest=/tmp/image.tar
