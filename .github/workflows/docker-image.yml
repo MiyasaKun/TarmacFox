@@ -1,7 +1,4 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
-name: Go
+name: Build Docker Image
 
 on:
   push:
@@ -10,20 +7,28 @@ on:
     branches: [ "master" ]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
       with:
-        go-version: '1.24'
-        cache: true
+        context: .
+        push: false
+        tags: tarmacfox:latest
+        outputs: type=docker,dest=/tmp/image.tar
 
-    - name: Build
-      run: go build -v .
-
-    - name: Test
-      run: go test -v .
+    - name: Upload Docker image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: tarmacfox-image
+        path: /tmp/image.tar

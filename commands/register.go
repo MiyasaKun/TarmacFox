@@ -1,8 +1,10 @@
 package commands
 
 import (
-    "log"
-    "github.com/bwmarrin/discordgo"
+	"log"
+	"tarmac-fox/commands/ticket"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type CommandHandler struct {
@@ -49,15 +51,39 @@ func GetHandler(commandName string) (func(s *discordgo.Session, i *discordgo.Int
 
 // SetupHandlers registers all command handlers with the Discord session
 func SetupHandlers(s *discordgo.Session) {
+    // Handle slash commands
     s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-        if i.ApplicationCommandData().Name == "" {
-            return
-        }
-        
-        if handler, exists := GetHandler(i.ApplicationCommandData().Name); exists {
-            handler(s, i)
-        } else {
-            log.Printf("No handler found for command: %s", i.ApplicationCommandData().Name)
+        if i.Type == discordgo.InteractionApplicationCommand {
+            if i.ApplicationCommandData().Name == "" {
+                return
+            }
+            
+            if handler, exists := GetHandler(i.ApplicationCommandData().Name); exists {
+                handler(s, i)
+            } else {
+                log.Printf("No handler found for command: %s", i.ApplicationCommandData().Name)
+            }
         }
     })
+    
+    // Handle component interactions (buttons, select menus, etc.)
+    s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+        if i.Type == discordgo.InteractionMessageComponent {
+            handleComponentInteraction(s, i)
+        }
+    })
+}
+
+// Handle all component interactions
+func handleComponentInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
+    customID := i.MessageComponentData().CustomID
+    
+    // Route to appropriate component handler based on CustomID
+    switch {
+    case customID == "ticket_category_select" || customID == "create_new_ticket_category":
+        // Import your ticket package and call the component handler
+        ticket.SetupComponentHandler(s, i)
+    default:
+        log.Printf("No handler found for component: %s", customID)
+    }
 }
