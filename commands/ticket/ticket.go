@@ -46,11 +46,3 @@ func TicketHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func SetupHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	HandleSetup(s, i)
 }
-
-// Separate handler for component interactions
-func SetupComponentHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	switch i.MessageComponentData().CustomID {
-	case "ticket_category_select":
-		handleCategorySelect(s, i)
-	}
-}

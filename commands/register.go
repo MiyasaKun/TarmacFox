@@ -80,9 +80,12 @@ func handleComponentInteraction(s *discordgo.Session, i *discordgo.InteractionCr
     
     // Route to appropriate component handler based on CustomID
     switch {
-    case customID == "ticket_category_select" || customID == "create_new_ticket_category":
-        // Import your ticket package and call the component handler
-        ticket.SetupComponentHandler(s, i)
+    case customID == "ticket_category_select":
+        ticket.HandleCategorySelect(s, i)
+    case customID == "ticket_log_channel_confirm":
+        ticket.HandleLogChannelConfirm(s, i)
+    case customID == "ticket_log_channel_cancel":
+        ticket.HandleLogChannelCancel(s, i)
     default:
         log.Printf("No handler found for component: %s", customID)
     }

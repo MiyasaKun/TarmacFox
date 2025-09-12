@@ -102,25 +102,104 @@ func categoriesToSelectMenu(s *discordgo.Session, guildID string) ([]discordgo.S
     return options, nil
 }
 
-func handleCategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func HandleCategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	selectedCategoryID := i.MessageComponentData().Values[0]
     log.Printf("Selected Category ID: %s", selectedCategoryID)
-    handleLogChannelSelect(s, i)
+    // Jump to next step - Log Channel Selection
+    handleLogChannel(s, i)
     // TODO - Save the CATEGORY and GUILD ID to the Database
 }
 
-func handleLogChannelSelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func handleLogChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+    embed := &discordgo.MessageEmbed{
+        Title:       "🎫 Ticket System Setup",
+        Description: "Step 2 - Please select a log channel for the ticket system.",
+        Color:      0x5865F2, // Discord blurple color
+        Fields: []*discordgo.MessageEmbedField{
+            {
+                Name:   "📋 Instructions",
+                Value:  "• The Bot will now create a log channel for ticket events\n• This channel will be used to log ticket creations, closures, and other important events\n• Please ensure the bot has permission to send messages in this channel",
+                Inline: false,
+            },
+        },
+        Footer: &discordgo.MessageEmbedFooter{
+            Text: "Please Confirm that the Bot is allowed to Create a Log Channel",
+        },
+    }
+    components := []discordgo.MessageComponent{
+        &discordgo.Button{
+            CustomID: "ticket_log_channel_confirm",
+            Label:    "Confirm",
+            Style:    discordgo.SuccessButton,
+        },
+        &discordgo.Button{
+            CustomID: "ticket_log_channel_cancel",
+            Label:    "Cancel",
+            Style:    discordgo.DangerButton,
+        },
+    }
     err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
         Type: discordgo.InteractionResponseUpdateMessage,
         Data: &discordgo.InteractionResponseData{
-            Content:    "Log channel selected successfully!",
-            Components: []discordgo.MessageComponent{},
+            Embeds:    []*discordgo.MessageEmbed{embed},
+            Flags:     discordgo.MessageFlagsEphemeral,
+            Components: []discordgo.MessageComponent{
+                &discordgo.ActionsRow{
+                    Components: components,
+                },
+            },
         },
     })
 
     if err != nil {
         log.Printf("Error sending interaction response: %v", err)
     }
+
+}
+
+
+func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+    // Final Step - Setup Complete
+    embed := &discordgo.MessageEmbed{
+        Title:       "🎫 Ticket System Setup",
+        Description: "Thanks for confirming the log channel setup. The bot will now create the log channel and finalize the ticket system configuration.",
+        Color:      0x5865F2, // Discord blurple color
+        Fields: []*discordgo.MessageEmbedField{
+            {
+                Name:   "📋 Instructions",
+                Value:  "The Setup is complete! You can now start using the ticket system with the `/ticket create` command.\n\nIf you need to change any settings, use the `/setup` command again.",
+                Inline: false,
+            },
+        },
+    }
+    
+    err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+        Type: discordgo.InteractionResponseUpdateMessage,
+        Data: &discordgo.InteractionResponseData{
+            Embeds:   []*discordgo.MessageEmbed{embed},
+        },
+    })
+
+    if err != nil {
+        log.Printf("Error sending interaction response: %v", err)
+    }
+    // Create the log channel
+    channel, err := s.GuildChannelCreate(i.GuildID, "behind-the-scenes", discordgo.ChannelTypeGuildText)
+    
+    if err != nil {
+        log.Printf("Couldn't create the log channel: %v", err)
+    }
+    //Change the Channel Topic and Permissions
+    channel.Topic = "This channel is used to log ticket events of the Tarmac Fox Bot"
+    s.ChannelEdit(channel.ID, &discordgo.ChannelEdit{
+        PermissionOverwrites: []*discordgo.PermissionOverwrite{
+            //TODO Check for Permissions
+        },
+    })
+}
+
+func HandleLogChannelCancel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 }
