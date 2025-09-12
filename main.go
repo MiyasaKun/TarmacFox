@@ -16,8 +16,6 @@ import (
 var sess *discordgo.Session
 
 var (
-	//Predefined Discord GUILD if used for Single Guild only
-	GuildID        = helper.Getenvordefault("GUILD_ID", "")
 	RemoveCommands = true
 )
 
@@ -27,17 +25,11 @@ func init() {
 	if err != nil {
 		log.Fatalf("error creating Discord session: %v", err)
 	}
-	helper.InitDB(helper.Getenvordefault("DB_URL", ""), &helper.Credentials{
-		Username: helper.Getenvordefault("DB_USERNAME", ""),
-		Password: helper.Getenvordefault("DB_PASSWORD", ""),
-	})
-	helper.InitCache()
 
 }
 
 func main() {
 
-	helper.GenerateTables()
 	commands.SetupHandlers(sess)
 
 	err := sess.Open()
@@ -59,6 +51,5 @@ func main() {
 	log.Println("Press Ctrl+C to exit")
 	<-stop
 
-	helper.CloseDB()
 	log.Println("Gracefully shutting down.")
 }

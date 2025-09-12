@@ -26,10 +26,10 @@ jobs:
         file: ./.github/workflows/Dockerfile # Specify the path to your Dockerfile
         push: false
         tags: tarmacfox:latest
-        outputs: type=docker,dest=/tmp/image.tar
+        outputs: type=docker,dest=/tmp/tarmac_fox.tar
 
     - name: Upload Docker image artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tarmacfox-image
-        path: /tmp/image.tar
+        name: tarmacfox
+        path: /tmp/tarmac_fox.tar

@@ -66,29 +66,6 @@ func HandleSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
         })
     }
 
-    // Add the create new category button
-    components = append(components, &discordgo.ActionsRow{
-        Components: []discordgo.MessageComponent{
-            &discordgo.Button{
-                Label:    "Create New Category",
-                Style:    discordgo.PrimaryButton,
-                CustomID: "create_new_ticket_category",
-                Emoji: &discordgo.ComponentEmoji{
-                    Name: "➕",
-                },
-            },
-        },
-    })
-
-    // If no categories exist, show a different message
-    if len(options) == 0 {
-        embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-            Name:   "ℹ️ No Categories Found",
-            Value:  "No categories were found in this server.\nClick the button below to create your first category.",
-            Inline: false,
-        })
-    }
-
     err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
         Type: discordgo.InteractionResponseChannelMessageWithSource,
         Data: &discordgo.InteractionResponseData{
@@ -125,21 +102,25 @@ func categoriesToSelectMenu(s *discordgo.Session, guildID string) ([]discordgo.S
     return options, nil
 }
 
-func HandleCategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func handleCategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	selectedCategoryID := i.MessageComponentData().Values[0]
-
-	// Respond to the interaction
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseUpdateMessage,
-		Data: &discordgo.InteractionResponseData{
-			Content:    "Category selected successfully! The ID is: " + selectedCategoryID,
-			Components: []discordgo.MessageComponent{}, // This removes the buttons and dropdown from the original message
-		},
-	})
-	if err != nil {
-		log.Printf("Error sending interaction response: %v", err)
-	}
+    log.Printf("Selected Category ID: %s", selectedCategoryID)
+    handleLogChannelSelect(s, i)
+    // TODO - Save the CATEGORY and GUILD ID to the Database
 }
-func handleCreateNewCategory(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	
+
+func handleLogChannelSelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+    err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+        Type: discordgo.InteractionResponseUpdateMessage,
+        Data: &discordgo.InteractionResponseData{
+            Content:    "Log channel selected successfully!",
+            Components: []discordgo.MessageComponent{},
+        },
+    })
+
+    if err != nil {
+        log.Printf("Error sending interaction response: %v", err)
+    }
+
 }

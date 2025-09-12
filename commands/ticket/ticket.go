@@ -37,10 +37,10 @@ var SetupCommandTicket = &discordgo.ApplicationCommand{
 func TicketHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "create":
-		HandleCreate(s, i)
-	case "close":
-		// Handle ticket closing
-	}
+		break
+	default: 
+		break
+}
 }
 
 func SetupHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -51,8 +51,6 @@ func SetupHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func SetupComponentHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.MessageComponentData().CustomID {
 	case "ticket_category_select":
-		HandleCategorySelect(s, i)
-	case "create_new_ticket_category":
-		handleCreateNewCategory(s, i)
+		handleCategorySelect(s, i)
 	}
 }
