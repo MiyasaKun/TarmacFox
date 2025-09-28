@@ -21,7 +21,7 @@ var (
 
 func init() {
 	var err error
-	sess, err = discordgo.New("Bot " + helper.Getenvordefault("BOT_TOKEN", ""))
+	sess, err = discordgo.New("Bot " + helper.GetEnvOrDefault("BOT_TOKEN", ""))
 	if err != nil {
 		log.Fatalf("error creating Discord session: %v", err)
 	}

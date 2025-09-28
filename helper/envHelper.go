@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func Getenvordefault(key string, fallback string) string {
+func GetEnvOrDefault(key string, fallback string) string {
 	value := os.Getenv(key)
 
 	if len(value) == 0 {
