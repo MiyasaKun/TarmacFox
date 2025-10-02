@@ -113,6 +113,7 @@ func HandleCategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	handleLogChannel(s, i)
 	// Store the ticketCategory globally in this package
 	ticketCategory, err = s.State.Channel(selectedCategoryID)
+    //TODO Safe the Category to the Database
 
 	if err != nil {
 		log.Printf("Error fetching selected category channel: %v", err)
@@ -204,12 +205,14 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 	}
 
 	//Check if the log channel already exists
+
 	for _, ch := range channels {
 		if ch.Name == helper.GetEnvOrDefault("LOG_CHANNEL_NAME", "behind-the-scenes") && ch.Type == discordgo.ChannelTypeGuildText {
 			log.Println("Log channel already exists. Skipping creation.")
 			if ch.Topic != helper.GetEnvOrDefault("LOG_CHANNEL_TOPIC", "This channel is used for logging ticket events. Please do not delete or modify this channel.") {
 				s.ChannelEdit(ch.ID, &discordgo.ChannelEdit{
 					Topic: helper.GetEnvOrDefault("LOG_CHANNEL_TOPIC", "This channel is used for logging ticket events. Please do not delete or modify this channel."),
+
 				})
 				return
 			}
@@ -228,10 +231,34 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 	s.ChannelEdit(channel.ID, &discordgo.ChannelEdit{
 		Topic:    helper.GetEnvOrDefault("LOG_CHANNEL_TOPIC", "This channel is used for logging ticket events. Please do not delete or modify this channel."),
 		ParentID: ticketCategory.ID,
+        PermissionOverwrites: []*discordgo.PermissionOverwrite {
+        },
 	})
-
 }
 
 func HandleLogChannelCancel(s *discordgo.Session, i *discordgo.InteractionCreate) {
+    // Final Step - Setup Complete
+	embed := &discordgo.MessageEmbed{
+		Title:       "🎫 Ticket System Setup",
+		Description: "The bot will now finalize the ticket system configuration.",
+		Color:       0x5865F2, // Discord blurple color
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "📋 Instructions",
+				Value:  "The Setup is complete! You can now start using the ticket system with the `/ticket create` command.\n\nIf you need to change any settings, use the `/setup` command again.",
+				Inline: false,
+			},
+		},
+	}
 
+    err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+        Type: discordgo.InteractionResponseUpdateMessage,
+        Data: &discordgo.InteractionResponseData{
+            Embeds: []*discordgo.MessageEmbed{embed},
+        },
+    })
+
+    if err != nil {
+        log.Printf("Error while sending Response: %v", err)
+    }
 }
