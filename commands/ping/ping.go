@@ -1,6 +1,10 @@
 package ping
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"tarmac-fox/helper"
+
+	"github.com/bwmarrin/discordgo"
+)
 
 var Command = &discordgo.ApplicationCommand{
 	Name:        "ping",
@@ -14,4 +18,5 @@ func Handler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Content: "Bot is alive and kicking 🏓",
 		},
 	})
+	helper.GetAllGuildRoles(s, i.GuildID)
 }

@@ -8,8 +8,10 @@ import (
 )
 
 var ticketCategory *discordgo.Channel
+var logChannel *discordgo.Channel
 
 func HandleSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
 	// Check User has the PermissionsLevel to use the Commands
 	if i.Member.Permissions&discordgo.PermissionAdministrator == 0 {
 		log.Println("User does not have permission to use the command.")
@@ -22,6 +24,7 @@ func HandleSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 		return
 	}
+
 	log.Println("User has permission to use the command.")
 
 	options, err := categoriesToSelectMenu(s, i.GuildID)
@@ -113,7 +116,7 @@ func HandleCategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	handleLogChannel(s, i)
 	// Store the ticketCategory globally in this package
 	ticketCategory, err = s.State.Channel(selectedCategoryID)
-    //TODO Safe the Category to the Database
+	//TODO Safe the Category to the Database
 
 	if err != nil {
 		log.Printf("Error fetching selected category channel: %v", err)
@@ -209,35 +212,61 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 	for _, ch := range channels {
 		if ch.Name == helper.GetEnvOrDefault("LOG_CHANNEL_NAME", "behind-the-scenes") && ch.Type == discordgo.ChannelTypeGuildText {
 			log.Println("Log channel already exists. Skipping creation.")
-			if ch.Topic != helper.GetEnvOrDefault("LOG_CHANNEL_TOPIC", "This channel is used for logging ticket events. Please do not delete or modify this channel.") {
-				s.ChannelEdit(ch.ID, &discordgo.ChannelEdit{
-					Topic: helper.GetEnvOrDefault("LOG_CHANNEL_TOPIC", "This channel is used for logging ticket events. Please do not delete or modify this channel."),
-
+			logChannel = ch
+			//Check if the channel is in the correct category
+			if ch.ParentID != ticketCategory.ID {
+				s.ChannelEditComplex(logChannel.ID, &discordgo.ChannelEdit{
+					Topic:    helper.GetEnvOrDefault("LOG_CHANNEL_TOPIC", "This channel is used for logging ticket events. Please do not delete or modify this channel."),
+					ParentID: ticketCategory.ID,
 				})
 				return
 			}
-			return
 		}
 	}
 
-	// Create the log channel
-	channel, err := s.GuildChannelCreate(i.GuildID, helper.GetEnvOrDefault("LOG_CHANNEL_NAME", "behind-the-scenes"), discordgo.ChannelTypeGuildText)
+	//Create the log channel
+	logChannel, err = s.GuildChannelCreate(i.GuildID, helper.GetEnvOrDefault("LOG_CHANNEL_NAME", "behind-the-scenes"), discordgo.ChannelTypeGuildText)
 
 	if err != nil {
 		log.Printf("Couldn't create the log channel: %v", err)
 	}
-
-	//Change the Channel Topic and Permissions
-	s.ChannelEdit(channel.ID, &discordgo.ChannelEdit{
+	// Set the topic of the log Channel
+	_, err = s.ChannelEditComplex(logChannel.ID, &discordgo.ChannelEdit{
 		Topic:    helper.GetEnvOrDefault("LOG_CHANNEL_TOPIC", "This channel is used for logging ticket events. Please do not delete or modify this channel."),
 		ParentID: ticketCategory.ID,
-        PermissionOverwrites: []*discordgo.PermissionOverwrite {
-        },
 	})
+
+	if err != nil {
+		log.Printf("Couldn't set the topic of the log channel: %v", err)
+	}
+
+	s.GuildChannelsReorder(i.GuildID, []*discordgo.Channel{
+		{
+			ID:       logChannel.ID,
+			ParentID: ticketCategory.ID,
+		},
+	})
+
+	_, err = s.ChannelMessageSendEmbed(logChannel.ID, &discordgo.MessageEmbed{
+		Title: "🎉 Log Channel Initialized! 📜✨",
+		Description: `
+				Heyo! 👋 This channel is where **all the logging magic happens** 🎟️🔮  
+				Every event, every update, all logged right here! 📝📊  
+
+				⚠️ Please **don’t yeet** 🚫🗑️ or **tinker** 🛠️ with this channel —  
+				our log goblins 🧙‍♂️ are watching... 👀
+				`,
+		Color: 0x00ADEF, // nice blue, change if you want
+
+	})
+
+	if err != nil {
+		log.Printf("Couldn't send message to the log channel: %v", err)
+	}
 }
 
 func HandleLogChannelCancel(s *discordgo.Session, i *discordgo.InteractionCreate) {
-    // Final Step - Setup Complete
+	// Final Step - Setup Complete
 	embed := &discordgo.MessageEmbed{
 		Title:       "🎫 Ticket System Setup",
 		Description: "The bot will now finalize the ticket system configuration.",
@@ -251,14 +280,15 @@ func HandleLogChannelCancel(s *discordgo.Session, i *discordgo.InteractionCreate
 		},
 	}
 
-    err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-        Type: discordgo.InteractionResponseUpdateMessage,
-        Data: &discordgo.InteractionResponseData{
-            Embeds: []*discordgo.MessageEmbed{embed},
-        },
-    })
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseUpdateMessage,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{embed},
+		},
+	})
 
-    if err != nil {
-        log.Printf("Error while sending Response: %v", err)
-    }
+	if err != nil {
+		log.Printf("Error while sending Response: %v", err)
+	}
+
 }
