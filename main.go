@@ -36,7 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error opening Discord session: %v", err)
 	}
-	
+
 	for _, cmd := range commands.Commands {
 		_, err := sess.ApplicationCommandCreate(sess.State.User.ID, "", cmd)
 		if err != nil {
@@ -51,5 +51,6 @@ func main() {
 	log.Println("Press Ctrl+C to exit")
 	<-stop
 
+	helper.CloseDatabase()
 	log.Println("Gracefully shutting down.")
 }

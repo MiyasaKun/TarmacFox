@@ -35,14 +35,6 @@ func initializeDatabase() {
 	}
 	// Create necessary tables if they don't exist
 	createDatabaseTables()
-	defer DB.Close()
-
-	err = DB.Ping()
-
-	if err != nil {
-		slog.Error("Failed to ping the database: " + err.Error())
-		return
-	}
 
 	slog.Info("Successfully connected to the database")
 
@@ -72,7 +64,7 @@ func initializeCache() {
 
 func createDatabaseTables() {
 
-	_, err := DB.Exec("CREATE TABLE IF NOT EXISTS guilds (id SERIAL PRIMARY KEY, guild_id VARCHAR(20) UNIQUE NOT NULL, ticket_category_id VARCHAR(20), log_channel_id VARCHAR(20));")
+	_, err := DB.Exec("CREATE TABLE IF NOT EXISTS guilds (id SERIAL PRIMARY KEY, guild_id VARCHAR(20) UNIQUE NOT NULL, ticket_category_id VARCHAR(20), log_channel_id VARCHAR(20), guild_name VARCHAR(255));")
 
 	if err != nil {
 		slog.Warn("Failed to create guilds table: " + err.Error())
@@ -95,4 +87,11 @@ func GetDatabaseInstance() *sql.DB {
 
 func GetCacheInstance() *redis.Client {
 	return CACHE
+}
+
+func CloseDatabase() {
+	if DB != nil {
+		slog.Info("Closing database connection.")
+		DB.Close()
+	}
 }

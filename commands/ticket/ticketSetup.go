@@ -2,6 +2,7 @@ package ticket
 
 import (
 	"log"
+	"log/slog"
 	"tarmac-fox/helper"
 
 	"github.com/bwmarrin/discordgo"
@@ -246,7 +247,21 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 			ParentID: ticketCategory.ID,
 		},
 	})
+	// Save the ticket channel and log channel to the database
+	// Get the guild Info
+	guild, err := s.State.Guild(i.GuildID)
 
+	if err != nil {
+		slog.Error("Failed to get guild from state: " + err.Error())
+		return
+	}
+	// Save the information to the database
+	err = helper.SetTicketChannel(i.GuildID, ticketCategory.ID, logChannel.ID, guild.Name)
+
+	if err != nil {
+		slog.Error("Failed to save ticket and log channel to the database: " + err.Error())
+	}
+	// Send a message to the log channel to indicate that it has been set up
 	_, err = s.ChannelMessageSendEmbed(logChannel.ID, &discordgo.MessageEmbed{
 		Title: "🎉 Log Channel Initialized! 📜✨",
 		Description: `
