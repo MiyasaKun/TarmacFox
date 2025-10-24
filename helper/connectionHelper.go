@@ -34,7 +34,7 @@ func initializeDatabase() {
 		return
 	}
 	// Create necessary tables if they don't exist
-	createDatabaseTables()
+	CreateDatabaseTables()
 
 	slog.Info("Successfully connected to the database")
 
@@ -59,25 +59,6 @@ func initializeCache() {
 	}
 
 	slog.Info("Successfully connected to the cache")
-
-}
-
-func createDatabaseTables() {
-
-	_, err := DB.Exec("CREATE TABLE IF NOT EXISTS guilds (id SERIAL PRIMARY KEY, guild_id VARCHAR(20) UNIQUE NOT NULL, ticket_category_id VARCHAR(20), log_channel_id VARCHAR(20), guild_name VARCHAR(255));")
-
-	if err != nil {
-		slog.Warn("Failed to create guilds table: " + err.Error())
-	}
-
-	slog.Info("Guild Table checked/created")
-
-	_, err = DB.Exec("CREATE TABLE IF NOT EXISTS tickets (id SERIAL PRIMARY KEY, guild_id VARCHAR(20) NOT NULL, channel_id VARCHAR(20) UNIQUE NOT NULL, user_id VARCHAR(20) NOT NULL, status VARCHAR(20) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);")
-
-	if err != nil {
-		slog.Warn("Failed to create tickets table: " + err.Error())
-	}
-	slog.Info("Tickets Table checked/created")
 
 }
 

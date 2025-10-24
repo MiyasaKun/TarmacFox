@@ -1,4 +1,4 @@
-package ticket
+package setup
 
 import (
 	"log"
@@ -26,7 +26,7 @@ func HandleSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	log.Println("User has permission to use the command.")
+	slog.Info("User has permission to use the command.")
 
 	options, err := categoriesToSelectMenu(s, i.GuildID)
 	if err != nil {
@@ -120,10 +120,10 @@ func HandleCategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	//TODO Safe the Category to the Database
 
 	if err != nil {
-		log.Printf("Error fetching selected category channel: %v", err)
+		slog.Error("Error fetching selected category channel: " + err.Error())
 	}
 
-	log.Println("Ticket Category set to:", ticketCategory.Name)
+	slog.Info("Ticket Category set", "category", ticketCategory.Name)
 }
 
 func handleLogChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -169,7 +169,7 @@ func handleLogChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		log.Printf("Error sending interaction response: %v", err)
+		slog.Error("Error sending interaction response: " + err.Error())
 	}
 
 }
@@ -198,14 +198,14 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 	})
 
 	if err != nil {
-		log.Printf("Error sending interaction response: %v", err)
+		slog.Error("Error sending interaction response: " + err.Error())
 	}
 
 	// Fetch existing Channels for the current Guild
 	channels, err := s.GuildChannels(i.GuildID)
 
 	if err != nil {
-		log.Printf("Couldn't fetch guild channels: %v", err)
+		slog.Error("Couldn't fetch guild channels: " + err.Error())
 	}
 
 	//Check if the log channel already exists
@@ -222,6 +222,7 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 				})
 				return
 			}
+			return 
 		}
 	}
 
@@ -229,7 +230,7 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 	logChannel, err = s.GuildChannelCreate(i.GuildID, helper.GetEnvOrDefault("LOG_CHANNEL_NAME", "behind-the-scenes"), discordgo.ChannelTypeGuildText)
 
 	if err != nil {
-		log.Printf("Couldn't create the log channel: %v", err)
+		slog.Error("Couldn't create the log channel: " + err.Error())
 	}
 	// Set the topic of the log Channel
 	_, err = s.ChannelEditComplex(logChannel.ID, &discordgo.ChannelEdit{
@@ -238,7 +239,7 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 	})
 
 	if err != nil {
-		log.Printf("Couldn't set the topic of the log channel: %v", err)
+		slog.Error("Couldn't set the topic of the log channel: " + err.Error())
 	}
 
 	s.GuildChannelsReorder(i.GuildID, []*discordgo.Channel{
@@ -276,7 +277,12 @@ func HandleLogChannelConfirm(s *discordgo.Session, i *discordgo.InteractionCreat
 	})
 
 	if err != nil {
-		log.Printf("Couldn't send message to the log channel: %v", err)
+		slog.Error("Couldn't send message to the log channel: " + err.Error())
+	}
+	_, err = handleTicketChannelCreate(s, i.GuildID, ticketCategory)
+
+	if err != nil {
+		slog.Error("Error creating ticket channel: " + err.Error())
 	}
 }
 
@@ -294,8 +300,15 @@ func HandleLogChannelCancel(s *discordgo.Session, i *discordgo.InteractionCreate
 			},
 		},
 	}
+	_, err := handleTicketChannelCreate(s, i.GuildID, ticketCategory)
 
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if err != nil {
+		log.Printf("Error creating ticket channel: %v", err)
+		embed.Description = "There was an error creating the ticket channel. Please try again."
+		embed.Color = 0xFF0000 // Red color for error
+	}
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{embed},
@@ -306,4 +319,58 @@ func HandleLogChannelCancel(s *discordgo.Session, i *discordgo.InteractionCreate
 		log.Printf("Error while sending Response: %v", err)
 	}
 
+}
+
+func handleTicketChannelCreate(s *discordgo.Session, guildID string, ticketCategory *discordgo.Channel) (channel *discordgo.Channel, err error) {
+	//Create the ticket channel
+	channel, err = s.GuildChannelCreate(guildID, "ticket-🔒", discordgo.ChannelTypeGuildText)
+
+	if err != nil {
+		slog.Error("Couldn't create the ticket channel: " + err.Error())
+		return nil, err
+	}
+	_, err = s.ChannelEdit(channel.ID, &discordgo.ChannelEdit{
+		Topic:    "This is your private ticket channel. Our support team will be with you shortly!",
+		ParentID: ticketCategory.ID,
+	})
+
+	if err != nil {
+		slog.Error("Couldn't set the topic of the ticket channel: " + err.Error())
+		return nil, err
+	}
+
+	// Create the embed for the ticket creation message
+	embed := &discordgo.MessageEmbed{
+		Title:       "🎫 Create a Ticket",
+		Description: "Click the button below to open a new support ticket.",
+		Color:       0x5865F2, // Discord blurple
+	}
+
+	// Create the button component
+	components := []discordgo.MessageComponent{
+		&discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				&discordgo.Button{
+					Label:    "Create Ticket",
+					Style:    discordgo.SuccessButton,
+					CustomID: "create_ticket_button",
+					Emoji: &discordgo.ComponentEmoji{
+						Name: "🎟️",
+					},
+				},
+			},
+		},
+	}
+
+	// Send the message with the embed and button to the new channel
+	_, err = s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
+		Embeds:     []*discordgo.MessageEmbed{embed},
+		Components: components,
+	})
+
+	if err != nil {
+		slog.Error("Failed to send ticket creation message: " + err.Error())
+		return nil, err
+	}
+	return channel, nil
 }

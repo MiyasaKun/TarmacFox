@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"tarmac-fox/commands"
+	"tarmac-fox/commands/config"
 	"tarmac-fox/helper"
 
 	// Import Discord Command Library
@@ -21,6 +21,7 @@ var (
 
 func init() {
 	var err error
+
 	sess, err = discordgo.New("Bot " + helper.GetEnvOrDefault("BOT_TOKEN", ""))
 	if err != nil {
 		log.Fatalf("error creating Discord session: %v", err)
@@ -30,14 +31,14 @@ func init() {
 
 func main() {
 
-	commands.SetupHandlers(sess)
+	config.SetupHandlers(sess)
 
 	err := sess.Open()
 	if err != nil {
 		log.Fatalf("error opening Discord session: %v", err)
 	}
 
-	for _, cmd := range commands.Commands {
+	for _, cmd := range config.Commands {
 		_, err := sess.ApplicationCommandCreate(sess.State.User.ID, "", cmd)
 		if err != nil {
 			log.Printf("Cannot create '%s' command: %v", cmd.Name, err)

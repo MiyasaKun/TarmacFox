@@ -1,8 +1,9 @@
-package commands
+package config
 
 import (
 	"log"
-	"tarmac-fox/commands/ticket"
+	"strings"
+	"tarmac-fox/commands/ticket/handler"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -80,12 +81,8 @@ func handleComponentInteraction(s *discordgo.Session, i *discordgo.InteractionCr
     
     // Route to appropriate component handler based on CustomID
     switch {
-    case customID == "ticket_category_select":
-        ticket.HandleCategorySelect(s, i)
-    case customID == "ticket_log_channel_confirm":
-        ticket.HandleLogChannelConfirm(s, i)
-    case customID == "ticket_log_channel_cancel":
-        ticket.HandleLogChannelCancel(s, i)
+    case strings.Split(customID, "_")[0] == "ticket":
+        handler.HandleTicketComponentInteraction(s,i, customID)
     default:
         log.Printf("No handler found for component: %s", customID)
     }
