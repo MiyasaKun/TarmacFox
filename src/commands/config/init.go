@@ -1,8 +1,8 @@
 package config
 
 import (
-	"tarmac-fox/commands/ping"
-	"tarmac-fox/commands/ticket"
+	"tarmac-fox/src/commands/ping"
+	"tarmac-fox/src/commands/ticket"
 )
 
 func init() {

@@ -8,14 +8,17 @@ func GetAllGuildCategories(s *discordgo.Session, guildID string) ([]*discordgo.C
 	var categories []*discordgo.Channel
 	var err error
 	channels, err := s.GuildChannels(guildID)
+	
 	if err != nil {
 		return nil, err
 	}
+
 	for _, ch := range channels {
 		if ch.Type == discordgo.ChannelTypeGuildCategory {
 			categories = append(categories, ch)
 		}
 	}
+
 	return categories, nil
 }
 
@@ -27,10 +30,13 @@ func GetAllGuildRoles(s *discordgo.Session, guildID string) (map[string]*discord
 	if err != nil {
 		return nil, err
 	}
+
 	var rolesMap = make(map[string]*discordgo.Role)
+
 	for _, role := range roles {
 		rolesMap[role.ID] = role
 	}
+
 	return rolesMap, nil
 }
 

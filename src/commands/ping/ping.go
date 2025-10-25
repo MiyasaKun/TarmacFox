@@ -1,7 +1,7 @@
 package ping
 
 import (
-	"tarmac-fox/helper"
+	"tarmac-fox/src/helper"
 
 	"github.com/bwmarrin/discordgo"
 )

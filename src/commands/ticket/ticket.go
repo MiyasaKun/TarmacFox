@@ -1,7 +1,7 @@
 package ticket
 
 import (
-	"tarmac-fox/commands/ticket/setup"
+	"tarmac-fox/src/commands/ticket/setup"
 	"github.com/bwmarrin/discordgo"
 )
 

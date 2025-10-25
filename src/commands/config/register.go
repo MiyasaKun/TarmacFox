@@ -3,7 +3,7 @@ package config
 import (
 	"log"
 	"strings"
-	"tarmac-fox/commands/ticket/handler"
+	"tarmac-fox/src/commands/ticket/handler"
 
 	"github.com/bwmarrin/discordgo"
 )

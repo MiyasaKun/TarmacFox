@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"tarmac-fox/commands/config"
-	"tarmac-fox/helper"
+	"tarmac-fox/src/commands/config"
+	"tarmac-fox/src/helper"
 
 	// Import Discord Command Library
 	"github.com/bwmarrin/discordgo"

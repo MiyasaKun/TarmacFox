@@ -2,7 +2,7 @@ package handler
 
 import (
 	"log/slog"
-	"tarmac-fox/commands/ticket/setup"
+	"tarmac-fox/src/commands/ticket/setup"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,12 +15,14 @@ func HandleTicketComponentInteraction(s *discordgo.Session, i *discordgo.Interac
 	}
 
 	switch {
+	case name == "ticket_btn_set_name":
+		setup.HandleSetName(s, i)
 	case name == "ticket_category_select":
-		setup.HandleCategorySelect(s, i)
+		//setup.HandleCategorySelect(s, i)
 	case name == "ticket_log_channel_confirm":
-		setup.HandleLogChannelConfirm(s, i)
+		//setup.HandleLogChannelConfirm(s, i)
 	case name == "ticket_log_channel_cancel":
-		setup.HandleLogChannelCancel(s, i)
+		//setup.HandleLogChannelCancel(s, i)
 	default:
 		slog.Error("Couldn't find handle for Component", "name", name)
 	}
