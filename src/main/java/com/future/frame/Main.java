@@ -28,6 +28,7 @@ public class Main {
         api.addEventListener(new CommandHandler());
         api.addEventListener(new ComponentHandler());
 
+
         logger.info("Commands and Handler registered");
     }
 }
